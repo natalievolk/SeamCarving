@@ -35,6 +35,10 @@ def read_image(filename):
 
     return image
 
+im3 = read_image("3x4_gradient.bin")
+im3.save("3x4_gradient.png")
+
+'''
 #Write a png image to bin
 image = Image.open("6x5.png")
 write_image(image, "6x5.bin")
@@ -51,3 +55,4 @@ im3.save("grad.png")
 for i in range(200):
     image = read_image("img%d.bin" % i)
     image.save("img%d.png" % i)
+'''

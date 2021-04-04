@@ -11,8 +11,8 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
 
     create_img(grad, im->height, im->width);
 
-    int d_x, d_y;
-    int rx, gx, bx, ry, gy, by;
+    double d_x, d_y;
+    double rx, gx, bx, ry, gy, by;
     uint8_t energy;
 
     // y_p = y+1, y_l = y-1, etc
@@ -33,21 +33,22 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
             if (x-1 < 0) x_l = im->width - 1;
             else x_l = x-1;
 
+            //printf("(%d, %d, %d)\n", get_pixel(im, y, x, 0), get_pixel(im, y, x, 1), get_pixel(im, y, x, 2));
 
-            rx = (int) (get_pixel(im, y, x+1, 0) - get_pixel(im, y, x-1, 0));
-            gx = (int) (get_pixel(im, y, x+1, 1) - get_pixel(im, y, x-1, 1));
-            bx = (int) (get_pixel(im, y, x+1, 2) - get_pixel(im, y, x-1, 2));
+            rx = (double) (get_pixel(im, y, x_p, 0) - get_pixel(im, y, x_l, 0));
+            gx = (double) (get_pixel(im, y, x_p, 1) - get_pixel(im, y, x_l, 1));
+            bx = (double) (get_pixel(im, y, x_p, 2) - get_pixel(im, y, x_l, 2));
 
-            ry = (int) (get_pixel(im, y+1, x, 0) - get_pixel(im, y-1, x, 0));
-            gy = (int) (get_pixel(im, y+1, x, 1) - get_pixel(im, y-1, x, 1));
-            by = (int) (get_pixel(im, y+1, x, 2) - get_pixel(im, y-1, x, 2));
+            ry = (double) (get_pixel(im, y_p, x, 0) - get_pixel(im, y_l, x, 0));
+            gy = (double) (get_pixel(im, y_p, x, 1) - get_pixel(im, y_l, x, 1));
+            by = (double) (get_pixel(im, y_p, x, 2) - get_pixel(im, y_l, x, 2));
 
             // d_x = sqrt( rx^2 + gx^2 + bx^2 )
             d_x = pow( pow(rx, 2) + pow(gx, 2) + pow(bx, 2) , 0.5 );
             d_y = pow( pow(ry, 2) + pow(gy, 2) + pow(by, 2) , 0.5 );
 
 // NOTE:    is it okay to just truncate here, or should I round?
-            energy = (int) ( pow ( pow(d_x, 2) + pow(d_y, 2) ) / 10 );
+            energy = (int) ( pow ( pow(d_x, 2) + pow(d_y, 2), 0.5 ) / 10 );
             if (energy > 255) energy = 255;
 
             set_pixel(*grad, y, x, energy, energy, energy);
@@ -55,9 +56,69 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
     }
 }
 
-void dynamic_seam(struct rgb_img *grad, double **best_arr) {
-    return;
+int min_2(int v1, int v2) {
+    if (v1 < v2)    return v1;
+    else            return v2;
+    
 }
+
+int min_3(int v1, int v2, int v3) {
+    if (v1 < v2 && v1 < v3)         return v1;
+    else if (v2 < v1 && v2 < v3)    return v2;
+    else if (v3 < v2 && v3 < v1)    return v3;
+}
+
+void dynamic_seam(struct rgb_img *grad, double **best_arr) {
+    *best_arr = (double *)malloc(sizeof(double)*(grad->height * grad->width));
+
+    int width = grad->width;
+
+    for (int j = 0; j < width; j++) {
+        (*best_arr)[j] = get_pixel(grad, 0, j, 0);
+    }
+
+    for (int i = 1; i < grad->height; i++) {
+        for (int j = 0; j < width; j++) {
+            if (j == 0) {
+                (*best_arr)[i*width + j] =  get_pixel(grad, i, j, 0) 
+                                + min_2((*best_arr)[(i-1) * width + j], (*best_arr)[(i-1) * width + j+1]);
+            }
+            else if (j == width - 1) {
+                (*best_arr)[i*width + j] =  get_pixel(grad, i, j, 0) 
+                                + min_2((*best_arr)[(i-1) * width + j], (*best_arr)[(i-1) * width + j-1]);
+            }
+            else {
+                (*best_arr)[i*width + j] =  get_pixel(grad, i, j, 0) 
+                                + min_3((*best_arr)[(i-1) * width + j+1], (*best_arr)[(i-1) * width + j], 
+                                    (*best_arr)[(i-1) * width + j-1]);
+            }
+        }
+    }
+    
+    /*cost = []
+    for i in range(len(energies)):
+        cost.append([0]*len(energies[0]))
+
+    for i in range(len(energies[0])):
+        cost[0][i] = energies[0][i]
+
+    for i in range(1, len(energies)):
+        for j in range(len(energies[0])):
+            if j == 0:
+                cost[i][j] = energies[i][j] + min(cost[i-1][j], cost[i-1][j+1])
+
+            elif j == len(energies[0]) - 1:
+                cost[i][j] = energies[i][j] + min(cost[i-1][j], cost[i-1][j-1])
+            else:
+                cost[i][j] = energies[i][j] + min(cost[i-1][j-1], cost[i-1][j], cost[i-1][j+1])
+    */
+}
+
+
+
+
+
+
 void recover_path(double *best, int height, int width, int **path) {
     return;
 }
