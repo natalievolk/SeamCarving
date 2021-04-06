@@ -66,7 +66,7 @@ int min_2(int v1, int v2) {
 int min_3(int v1, int v2, int v3) {
     if (v1 < v2 && v1 < v3)         return v1;
     else if (v2 < v1 && v2 < v3)    return v2;
-    else if (v3 < v2 && v3 < v1)    return v3;
+    else                            return v3;
 }
 
 // NOTE: seam NOT allowed to wrap around edges
@@ -137,6 +137,29 @@ void recover_path(double *best, int height, int width, int **path) {
         (*path)[i] = min_location;
     }
 }
+
 void remove_seam(struct rgb_img *src, struct rgb_img **dest, int *path) {
-    return;
+    create_img(dest, src->height, src->width - 1);
+
+    int skip;
+    uint8_t red, green, blue;
+    int set_x;
+
+    for (int i = 0; i < src->height; i++) {
+        skip = path[i];
+        set_x = 0;
+
+        for (int j = 0; j < src->width; j++) {
+            if (j == skip) { 
+                set_x--;
+            } else {
+                red =  get_pixel(src, i, j, 0);
+                green = get_pixel(src, i, j, 1);
+                blue = get_pixel(src, i, j, 2);
+
+                set_pixel(*dest, i, set_x, red, green, blue);
+            }
+            set_x++;
+        }
+    }
 }

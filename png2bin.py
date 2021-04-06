@@ -35,8 +35,8 @@ def read_image(filename):
 
     return image
 
-im3 = read_image("3x4_gradient.bin")
-im3.save("3x4_gradient.png")
+im3 = read_image("6x5_remove.bin")
+im3.save("6x5_remove.png")
 
 '''
 #Write a png image to bin
