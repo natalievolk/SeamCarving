@@ -26,6 +26,13 @@ int main() {
         printf("\n");
     }
 
+    int *path;
+    recover_path(best_arr, grad->height, grad->width, &path);
+
+    for (int i = 0; i < grad->height; i++) {
+        printf("%d\n", path[i]);
+    }
+
     //write_img(grad, "3x4_gradient.bin");
     //write_img(grad, "6x5_gradient.bin");
 

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+//#include <float.h>
 
 #include "seamcarving.h"
 #include "c_img.h"
@@ -68,6 +69,7 @@ int min_3(int v1, int v2, int v3) {
     else if (v3 < v2 && v3 < v1)    return v3;
 }
 
+// NOTE: seam NOT allowed to wrap around edges
 void dynamic_seam(struct rgb_img *grad, double **best_arr) {
     *best_arr = (double *)malloc(sizeof(double)*(grad->height * grad->width));
 
@@ -94,33 +96,46 @@ void dynamic_seam(struct rgb_img *grad, double **best_arr) {
             }
         }
     }
-    
-    /*cost = []
-    for i in range(len(energies)):
-        cost.append([0]*len(energies[0]))
-
-    for i in range(len(energies[0])):
-        cost[0][i] = energies[0][i]
-
-    for i in range(1, len(energies)):
-        for j in range(len(energies[0])):
-            if j == 0:
-                cost[i][j] = energies[i][j] + min(cost[i-1][j], cost[i-1][j+1])
-
-            elif j == len(energies[0]) - 1:
-                cost[i][j] = energies[i][j] + min(cost[i-1][j], cost[i-1][j-1])
-            else:
-                cost[i][j] = energies[i][j] + min(cost[i-1][j-1], cost[i-1][j], cost[i-1][j+1])
-    */
 }
 
 
-
-
-
-
 void recover_path(double *best, int height, int width, int **path) {
-    return;
+    *path = (int *)malloc(sizeof(int) * height);
+    //double min = DBL_MAX;
+    double min = -100;
+    int min_location = 0;
+
+    // find min in last row
+    for (int j = 0; j < width; j++) {
+        if (min < 0  ||  best[(height-1)*width + j] < min) {
+            min = best[(height-1)*width + j];
+            min_location = j;
+        }
+    }
+    (*path)[height-1] = min_location;
+    
+    int offset = 0;
+    for (int i = height-2; i >= 0; i--) {
+        min = best[i*width + min_location];
+
+        //printf("%d\n", i);
+        //printf("%f, %f, %f\n", best[i*width + min_location], 
+        //                best[i*width + min_location + 1], best[i*width + min_location - 1]);
+
+        if (min > best[i*width + min_location + 1]) {
+            min = best[i*width + min_location + 1];
+            offset = 1;
+        }
+        if (min > best[i*width + min_location - 1]) {
+            min = best[i*width + min_location - 1];
+            offset = -1;
+        }
+        //printf("%f\n\n", min);
+
+        min_location = min_location + offset;
+
+        (*path)[i] = min_location;
+    }
 }
 void remove_seam(struct rgb_img *src, struct rgb_img **dest, int *path) {
     return;
