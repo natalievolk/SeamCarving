@@ -25,23 +25,25 @@ int main() {
         }
         printf("\n");
     }
-
+    
     int *path;
     recover_path(best_arr, grad->height, grad->width, &path);
 
     for (int i = 0; i < grad->height; i++) {
-        printf("%d\n", path[i]);
+       printf("%d\n", path[i]);
     }
-
+    
+    /*
     //write_img(grad, "3x4_gradient.bin");
     //write_img(grad, "6x5_gradient.bin");
-    struct rgb_img *dest;
+    //struct rgb_img *dest;
 
-    remove_seam(im, &dest, path);
+    //remove_seam(im, &dest, path);
 
-    write_img(dest, "6x5_remove.bin");
+    //write_img(dest, "6x5_remove.bin");
     //set_pixel(struct rgb_img *im, int y, int x, int r, int g, int b)
-    destroy_image(dest);
+    //destroy_image(dest);
+    */
 
     destroy_image(im);
     destroy_image(grad);

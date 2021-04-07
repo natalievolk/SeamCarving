@@ -45,11 +45,10 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
             by = (double) (get_pixel(im, y_p, x, 2) - get_pixel(im, y_l, x, 2));
 
             // d_x = sqrt( rx^2 + gx^2 + bx^2 )
-            d_x = pow( pow(rx, 2) + pow(gx, 2) + pow(bx, 2) , 0.5 );
-            d_y = pow( pow(ry, 2) + pow(gy, 2) + pow(by, 2) , 0.5 );
+            d_x = pow(rx, 2) + pow(gx, 2) + pow(bx, 2);
+            d_y = pow(ry, 2) + pow(gy, 2) + pow(by, 2);
 
-// NOTE:    is it okay to just truncate here, or should I round?
-            energy = (int) ( pow ( pow(d_x, 2) + pow(d_y, 2), 0.5 ) / 10 );
+            energy = (int) ( pow(d_x + d_y, 0.5 ) / 10 );
             if (energy > 255) energy = 255;
 
             set_pixel(*grad, y, x, energy, energy, energy);
@@ -58,14 +57,14 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
 }
 
 int min_2(int v1, int v2) {
-    if (v1 < v2)    return v1;
+    if (v1 <= v2)    return v1;
     else            return v2;
     
 }
 
 int min_3(int v1, int v2, int v3) {
-    if (v1 < v2 && v1 < v3)         return v1;
-    else if (v2 < v1 && v2 < v3)    return v2;
+    if (v1 <= v2 && v1 <= v3)         return v1;
+    else if (v2 <= v1 && v2 <= v3)    return v2;
     else                            return v3;
 }
 
@@ -122,11 +121,11 @@ void recover_path(double *best, int height, int width, int **path) {
         //printf("%f, %f, %f\n", best[i*width + min_location], 
         //                best[i*width + min_location + 1], best[i*width + min_location - 1]);
 
-        if (min > best[i*width + min_location + 1]) {
+        if (min_location + 1 < width && min > best[i*width + min_location + 1]) {
             min = best[i*width + min_location + 1];
             offset = 1;
         }
-        if (min > best[i*width + min_location - 1]) {
+        if (min_location - 1 >= 0 && min > best[i*width + min_location - 1]) {
             min = best[i*width + min_location - 1];
             offset = -1;
         }
