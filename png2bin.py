@@ -35,10 +35,11 @@ def read_image(filename):
 
     return image
 
+'''
 im3 = read_image("6x5_remove.bin")
 im3.save("6x5_remove.png")
 
-'''
+
 #Write a png image to bin
 image = Image.open("6x5.png")
 write_image(image, "6x5.bin")
@@ -49,10 +50,11 @@ write_image(image, "3x4.bin")
 im2 = read_image("a.bin")
 im3 = read_image("6x5_grad.bin")
 im3.save("grad.png")
+'''
 
 
 # Write multiple images from bin to png
-for i in range(200):
-    image = read_image("img%d.bin" % i)
+for i in range(10):
+    image = read_image("img%d.bin" % (i*10))
     image.save("img%d.png" % i)
-'''
+

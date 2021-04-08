@@ -111,10 +111,12 @@ void recover_path(double *best, int height, int width, int **path) {
             min_location = j;
         }
     }
+
     (*path)[height-1] = min_location;
     
-    int offset = 0;
+    int offset;
     for (int i = height-2; i >= 0; i--) {
+        offset = 0;
         min = best[i*width + min_location];
 
         //printf("%d\n", i);
@@ -125,7 +127,7 @@ void recover_path(double *best, int height, int width, int **path) {
             min = best[i*width + min_location + 1];
             offset = 1;
         }
-        if (min_location - 1 >= 0 && min > best[i*width + min_location - 1]) {
+        if (min_location - 1 >= 0 && min >= best[i*width + min_location - 1]) {
             min = best[i*width + min_location - 1];
             offset = -1;
         }
