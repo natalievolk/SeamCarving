@@ -67,11 +67,11 @@ int main() {
         recover_path(best, grad->height, grad->width, &path);
         remove_seam(im, &cur_im, path);
 
-        if (i % 10 == 0) {
+        //if (i % 10 == 0) {
             char filename[200];
-            sprintf(filename, "img%d.bin", i);
+            sprintf(filename, "Images/bin/img%d.bin", i);
             write_img(cur_im, filename);
-        }
+        //}
 
         destroy_image(im);
         destroy_image(grad);
