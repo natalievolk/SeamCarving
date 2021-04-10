@@ -17,13 +17,14 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
     uint8_t energy;
 
     // y_p = y+1, y_l = y-1, etc
+    // these variables will help when dealing with wraparounds
     int y_p, y_l;
     int x_p, x_l;
 
     for(int y = 0; y < im->height; y++){
         for(int x = 0; x < im->width; x++){
 
-            // dealing with wraparounds -- CHECK!!
+            // dealing with wraparounds
             if (y+1 == im->height) y_p = 0;
             else y_p = y+1;
             if (y-1 < 0) y_l = im->height - 1;
@@ -34,8 +35,7 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
             if (x-1 < 0) x_l = im->width - 1;
             else x_l = x-1;
 
-            //printf("(%d, %d, %d)\n", get_pixel(im, y, x, 0), get_pixel(im, y, x, 1), get_pixel(im, y, x, 2));
-
+            // getting pixel values
             rx = (double) (get_pixel(im, y, x_p, 0) - get_pixel(im, y, x_l, 0));
             gx = (double) (get_pixel(im, y, x_p, 1) - get_pixel(im, y, x_l, 1));
             bx = (double) (get_pixel(im, y, x_p, 2) - get_pixel(im, y, x_l, 2));
@@ -49,26 +49,28 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
             d_y = pow(ry, 2) + pow(gy, 2) + pow(by, 2);
 
             energy = (int) ( pow(d_x + d_y, 0.5 ) / 10 );
-            if (energy > 255) energy = 255;
+            if (energy > 255) energy = 255; // uint8_t cannot be greater than 255
 
             set_pixel(*grad, y, x, energy, energy, energy);
         }
     }
 }
 
+// finds min of two ints; helper function for dynamic_seam()
 int min_2(int v1, int v2) {
     if (v1 <= v2)    return v1;
     else            return v2;
     
 }
 
+// finds min of three ints; helper function for dynamic_seam()
 int min_3(int v1, int v2, int v3) {
     if (v1 <= v2 && v1 <= v3)         return v1;
     else if (v2 <= v1 && v2 <= v3)    return v2;
     else                            return v3;
 }
 
-// NOTE: seam NOT allowed to wrap around edges
+
 void dynamic_seam(struct rgb_img *grad, double **best_arr) {
     *best_arr = (double *)malloc(sizeof(double)*(grad->height * grad->width));
 
@@ -80,14 +82,17 @@ void dynamic_seam(struct rgb_img *grad, double **best_arr) {
 
     for (int i = 1; i < grad->height; i++) {
         for (int j = 0; j < width; j++) {
+            // if at leftmost edge
             if (j == 0) {
                 (*best_arr)[i*width + j] =  get_pixel(grad, i, j, 0) 
                                 + min_2((*best_arr)[(i-1) * width + j], (*best_arr)[(i-1) * width + j+1]);
             }
+            // if at rightmost edge
             else if (j == width - 1) {
                 (*best_arr)[i*width + j] =  get_pixel(grad, i, j, 0) 
                                 + min_2((*best_arr)[(i-1) * width + j], (*best_arr)[(i-1) * width + j-1]);
             }
+            // if in middle of image
             else {
                 (*best_arr)[i*width + j] =  get_pixel(grad, i, j, 0) 
                                 + min_3((*best_arr)[(i-1) * width + j+1], (*best_arr)[(i-1) * width + j], 
@@ -100,9 +105,8 @@ void dynamic_seam(struct rgb_img *grad, double **best_arr) {
 
 void recover_path(double *best, int height, int width, int **path) {
     *path = (int *)malloc(sizeof(int) * height);
-    //double min = DBL_MAX;
-    double min = -100;
-    int min_location = 0;
+    double min = -100;      // value of min energy pixel in current row
+    int min_location = 0;   // location of min energy pixel in current row
 
     // find min in last row
     for (int j = 0; j < width; j++) {
@@ -111,18 +115,16 @@ void recover_path(double *best, int height, int width, int **path) {
             min_location = j;
         }
     }
-
     (*path)[height-1] = min_location;
     
-    int offset;
+    int offset;     // -1 if the path should progress one to the left
+                    // +1 if the path should progress one to the right
+                    //  0 if straight ahead
     for (int i = height-2; i >= 0; i--) {
         offset = 0;
         min = best[i*width + min_location];
 
-        //printf("%d\n", i);
-        //printf("%f, %f, %f\n", best[i*width + min_location], 
-        //                best[i*width + min_location + 1], best[i*width + min_location - 1]);
-
+        // takes leftmost path, if there are multiple options
         if (min_location + 1 < width && min > best[i*width + min_location + 1]) {
             min = best[i*width + min_location + 1];
             offset = 1;
@@ -131,8 +133,8 @@ void recover_path(double *best, int height, int width, int **path) {
             min = best[i*width + min_location - 1];
             offset = -1;
         }
-        //printf("%f\n\n", min);
 
+        // set new min_location
         min_location = min_location + offset;
 
         (*path)[i] = min_location;
@@ -142,18 +144,20 @@ void recover_path(double *best, int height, int width, int **path) {
 void remove_seam(struct rgb_img *src, struct rgb_img **dest, int *path) {
     create_img(dest, src->height, src->width - 1);
 
-    int skip;
+    int skip;   // pixel that should be removed in each row
     uint8_t red, green, blue;
-    int set_x;
+    int set_x;  // keeps track of what pixel it should set in new image
 
     for (int i = 0; i < src->height; i++) {
-        skip = path[i];
+        skip = path[i];     // set skipped pixel based on location of path
         set_x = 0;
 
         for (int j = 0; j < src->width; j++) {
+            // if we're at the pixel we should skip, set_x shouldn't increase
             if (j == skip) { 
                 set_x--;
             } else {
+                // set pixels in new image
                 red =  get_pixel(src, i, j, 0);
                 green = get_pixel(src, i, j, 1);
                 blue = get_pixel(src, i, j, 2);

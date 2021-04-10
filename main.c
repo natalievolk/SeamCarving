@@ -60,7 +60,7 @@ int main() {
 
     read_in_img(&im, "HJoceanSmall.bin");
     
-    for(int i = 0; i < 100; i++){
+    for(int i = 0; i < 300; i++){
         printf("i = %d\n", i);
         calc_energy(im,  &grad);
         dynamic_seam(grad, &best);

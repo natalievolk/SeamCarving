@@ -54,7 +54,7 @@ im3.save("grad.png")
 
 
 # Write multiple images from bin to png
-for i in range(100):
+for i in range(300):
     image = read_image("Images/bin/img%d.bin" % i)
     image.save("Images/img%d.png" % i)
 
