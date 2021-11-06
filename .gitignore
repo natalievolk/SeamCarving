@@ -1,5 +1,10 @@
 venv
 
+.vscode
+
+main
+.DS_Store
+
 # Prerequisites
 *.d
 
