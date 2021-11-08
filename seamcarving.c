@@ -17,7 +17,7 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
     uint8_t energy;
 
     // y_p = y+1, y_l = y-1, etc
-    // these variables will help when dealing with wraparounds
+    // for dealing with wraparounds in the lowest energy path
     int y_p, y_l;
     int x_p, x_l;
 
@@ -56,12 +56,14 @@ void calc_energy(struct rgb_img *im, struct rgb_img **grad) {
     }
 }
 
+
 // finds min of two ints; helper function for dynamic_seam()
 int min_2(int v1, int v2) {
     if (v1 <= v2)    return v1;
     else            return v2;
     
 }
+
 
 // finds min of three ints; helper function for dynamic_seam()
 int min_3(int v1, int v2, int v3) {
@@ -71,6 +73,7 @@ int min_3(int v1, int v2, int v3) {
 }
 
 
+// create dynamic best matrix showing lowest energy required to get to each point
 void dynamic_seam(struct rgb_img *grad, double **best_arr) {
     *best_arr = (double *)malloc(sizeof(double)*(grad->height * grad->width));
 
@@ -103,6 +106,7 @@ void dynamic_seam(struct rgb_img *grad, double **best_arr) {
 }
 
 
+// finds path of the minimum seam from the dynamic best matrix
 void recover_path(double *best, int height, int width, int **path) {
     *path = (int *)malloc(sizeof(int) * height);
     double min = -100;      // value of min energy pixel in current row
@@ -141,6 +145,8 @@ void recover_path(double *best, int height, int width, int **path) {
     }
 }
 
+
+// removes the lowest energy seam from the image
 void remove_seam(struct rgb_img *src, struct rgb_img **dest, int *path) {
     create_img(dest, src->height, src->width - 1);
 
